@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"ryaaaaaan96.github.io","root":"/","images":"/images","darkmode":false,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"hide","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="几乎所有嵌入式教程的第一个入门教程都是点灯操作，输入输出是所有引脚的基本功能，也是单片机实现对外界控制和感知的基础，本文就以stm32的GPIO硬件结构作为例子开始介绍。 GPIO的硬件结构CSDN上有两篇博客说的很好，适合初学理解，但在具体内容上存在一些问题，和参考手册内容不符合，本篇博客用于记录学习过程以及参考手册阅读[https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_43129713">
+<meta property="og:type" content="article">
+<meta property="og:title" content="嵌入式入门--基础概念：1 GPIO">
+<meta property="og:url" content="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/1_GPIO/index.html">
+<meta property="og:site_name" content="Ryan的技术博客">
+<meta property="og:description" content="几乎所有嵌入式教程的第一个入门教程都是点灯操作，输入输出是所有引脚的基本功能，也是单片机实现对外界控制和感知的基础，本文就以stm32的GPIO硬件结构作为例子开始介绍。 GPIO的硬件结构CSDN上有两篇博客说的很好，适合初学理解，但在具体内容上存在一些问题，和参考手册内容不符合，本篇博客用于记录学习过程以及参考手册阅读[https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_43129713">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Overall_Structure.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Analog_Structure_1.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Analog_Structure_2.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Input_Structure.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Output_Structure.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Alternate_Structure.png">
+<meta property="article:published_time" content="2024-09-20T05:10:57.000Z">
+<meta property="article:modified_time" content="2024-10-10T04:49:19.136Z">
+<meta property="article:author" content="Ryan">
+<meta property="article:tag" content="嵌入式入门">
+<meta property="article:tag" content="基础概念">
+<meta property="article:tag" content="gpio">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ryaaaaaan96.github.io/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Overall_Structure.png">
+
+
+<link rel="canonical" href="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/1_GPIO/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/1_GPIO/","path":"2024/09/20/Introduction_Embedded_Systems/1_GPIO/","title":"嵌入式入门--基础概念：1 GPIO"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>嵌入式入门--基础概念：1 GPIO | Ryan的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Ryan的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GPIO%E4%B8%AD%E7%9A%84%E5%9B%9B%E4%B8%AA%E5%85%B3%E9%94%AE%E5%99%A8%E4%BB%B6%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">GPIO中的四个关键器件介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E6%8A%A4%E4%BA%8C%E7%BA%A7%E7%AE%A1"><span class="nav-number">1.0.1.</span> <span class="nav-text">保护二级管</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E6%8B%89%E7%94%B5%E9%98%BB%E5%92%8C%E4%B8%8B%E6%8B%89%E7%94%B5%E9%98%BB"><span class="nav-number">1.0.2.</span> <span class="nav-text">上拉电阻和下拉电阻</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#P-MOS%E7%AE%A1%E5%92%8CN-MOS%E7%AE%A1"><span class="nav-number">1.0.3.</span> <span class="nav-text">P-MOS管和N-MOS管</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TTL%E8%82%96%E7%89%B9%E5%9F%BA%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-number">1.0.4.</span> <span class="nav-text">TTL肖特基触发器</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GPIO%E7%9A%848%E7%A7%8D%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">GPIO的8种工作模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E7%8A%B6%E6%80%81-%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA"><span class="nav-number">2.1.</span> <span class="nav-text">模拟状态(输入输出)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E8%BE%93%E5%85%A5%E7%8A%B6%E6%80%81"><span class="nav-number">2.1.1.</span> <span class="nav-text">模拟输入状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E8%BE%93%E5%87%BA%E7%8A%B6%E6%80%81"><span class="nav-number">2.1.2.</span> <span class="nav-text">模拟输出状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">输入模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%87%BA%E9%A9%B1%E5%8A%A8%E5%99%A8"><span class="nav-number">2.2.1.</span> <span class="nav-text">输出驱动器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TTL%E8%A7%A6%E5%8F%91%E5%99%A8"><span class="nav-number">2.2.2.</span> <span class="nav-text">TTL触发器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96%E8%BE%93%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.2.3.</span> <span class="nav-text">读取输入数据寄存器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%87%BA%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.3.</span> <span class="nav-text">输出模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E6%BC%8F%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.3.1.</span> <span class="nav-text">开漏模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A8%E6%8C%BD%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.3.2.</span> <span class="nav-text">推挽模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%BD%E5%AF%86%E7%89%B9%E8%A7%A6%E5%8F%91%E5%99%A8%E7%9A%84%E8%BE%93%E5%85%A5%E5%8A%9F%E8%83%BD"><span class="nav-number">2.3.3.</span> <span class="nav-text">施密特触发器的输入功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E6%8B%89%E5%92%8C%E4%B8%8B%E6%8B%89%E7%94%B5%E9%98%BB"><span class="nav-number">2.3.4.</span> <span class="nav-text">上拉和下拉电阻</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.3.5.</span> <span class="nav-text">输入数据寄存器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%87%BA%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.3.6.</span> <span class="nav-text">输出数据寄存器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E7%94%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.4.</span> <span class="nav-text">复用模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E6%BC%8F%E4%B8%8E%E6%8E%A8%E6%8C%BD%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.4.1.</span> <span class="nav-text">开漏与推挽模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%87%BA%E7%BC%93%E5%86%B2%E5%99%A8%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.4.2.</span> <span class="nav-text">输出缓冲器驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%BD%E5%AF%86%E7%89%B9%E8%A7%A6%E5%8F%91%E5%99%A8%E8%BE%93%E5%85%A5"><span class="nav-number">2.4.3.</span> <span class="nav-text">施密特触发器输入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%B1%E4%B8%8A%E6%8B%89%E5%92%8C%E4%B8%8B%E6%8B%89%E7%94%B5%E9%98%BB"><span class="nav-number">2.4.4.</span> <span class="nav-text">弱上拉和下拉电阻</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%87%87%E6%A0%B7"><span class="nav-number">2.4.5.</span> <span class="nav-text">数据采样</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96%E8%BE%93%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8-1"><span class="nav-number">2.4.6.</span> <span class="nav-text">读取输入数据寄存器</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8E%A8%E6%8C%BD%E5%92%8C%E5%BC%80%E6%BC%8F%E7%9A%84%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">推挽和开漏的总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E6%8C%BD%E8%BE%93%E5%87%BA%E7%BB%93%E6%9E%84%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">推挽输出结构及其应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">3.1.1.</span> <span class="nav-text">工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B8%E5%9E%8B%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.1.2.</span> <span class="nav-text">典型应用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E6%BC%8F%E8%BE%93%E5%87%BA%EF%BC%88Open-Drain-Source%EF%BC%89%E7%9A%84%E7%89%B9%E6%80%A7%E4%B8%8E%E5%BA%94%E7%94%A8"><span class="nav-number">3.2.</span> <span class="nav-text">开漏输出（Open Drain&#x2F;Source）的特性与应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%B5%E6%B5%81%E9%A9%B1%E5%8A%A8%E8%83%BD%E5%8A%9B"><span class="nav-number">3.2.1.</span> <span class="nav-text">电流驱动能力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B8%E5%9E%8B%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF-1"><span class="nav-number">3.2.2.</span> <span class="nav-text">典型应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E6%8B%89%E7%94%B5%E9%98%BB%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">3.2.3.</span> <span class="nav-text">上拉电阻的选择</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STM32-GPIO%E7%9A%84%E9%BB%98%E8%AE%A4%E7%8A%B6%E6%80%81%E5%8F%8A%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%AE%AE"><span class="nav-number">4.</span> <span class="nav-text">STM32 GPIO的默认状态及配置建议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#STM32-GPIO%E7%9A%84%E9%BB%98%E8%AE%A4%E7%8A%B6%E6%80%81"><span class="nav-number">4.1.</span> <span class="nav-text">STM32 GPIO的默认状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEGPIO%E7%9A%84%E5%BB%BA%E8%AE%AE"><span class="nav-number">4.2.</span> <span class="nav-text">配置GPIO的建议</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ryan</p>
+  <div class="site-description" itemprop="description">技术记录</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/1_GPIO/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ryan">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ryan的技术博客">
+      <meta itemprop="description" content="技术记录">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="嵌入式入门--基础概念：1 GPIO | Ryan的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          嵌入式入门--基础概念：1 GPIO
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-09-20 13:10:57" itemprop="dateCreated datePublished" datetime="2024-09-20T13:10:57+08:00">2024-09-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-10-10 12:49:19" itemprop="dateModified" datetime="2024-10-10T12:49:19+08:00">2024-10-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" itemprop="url" rel="index"><span itemprop="name">嵌入式入门</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" itemprop="url" rel="index"><span itemprop="name">基础概念</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>几乎所有嵌入式教程的第一个入门教程都是点灯操作，输入输出是所有引脚的基本功能，也是单片机实现对外界控制和感知的基础，本文就以stm32的GPIO硬件结构作为例子开始介绍。</p>
+<p>GPIO的硬件结构CSDN上有两篇博客说的很好，适合初学理解，但在具体内容上存在一些问题，和参考手册内容不符合，本篇博客用于记录学习过程以及参考手册阅读[<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43129713/article/details/120710189]">https://blog.csdn.net/weixin_43129713/article/details/120710189]</a></p>
+<h1 id="GPIO中的四个关键器件介绍"><a href="#GPIO中的四个关键器件介绍" class="headerlink" title="GPIO中的四个关键器件介绍"></a>GPIO中的四个关键器件介绍</h1><p><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Overall_Structure.png" alt="GPIO总体结构图"><br>总体上而言，主要部分有保护二极管，上下拉电阻，P-MOS管和N-MOS管以及TTL施密特触发器几个器件进行控制。</p>
+<h3 id="保护二级管"><a href="#保护二级管" class="headerlink" title="保护二级管"></a>保护二级管</h3><p>图中1所示的为两个保护二极管。这两个保护二极管可以防止引脚外部过高或过低的电压输入，<strong>当引脚电压高于VDD时，上方的二极管导通，当引脚电压低于VSS时，下方的二极管导通</strong>，防止不正常电压引入芯片导致芯片烧毁。（其中对于5V耐压的VDD_FT为5V）尽管有这样的保护，并不意味着STM32的引脚能直接外接大功率驱动器件，如直接驱动电机，要么电机不转，要么导致芯片烧坏，必须要加大功率及隔离电路驱动。</p>
+<h3 id="上拉电阻和下拉电阻"><a href="#上拉电阻和下拉电阻" class="headerlink" title="上拉电阻和下拉电阻"></a>上拉电阻和下拉电阻</h3><p>图中2所示的为上拉电阻和下拉电阻。其中VDD为I&#x2F;O引脚和内部调压器（稳压）的电压，是设备的工作电压，STM32的数据手册为2.0v~3.6v，这里就当3.3V好了，无关紧要。VDD所连的电阻为上拉电阻，当开关打开时，其输出就是高电平。VSS为电路公共地端电压，一般接GND。VSS所连的电阻为下拉电阻，当开关打开时，其输出就是低电平。</p>
+<h3 id="P-MOS管和N-MOS管"><a href="#P-MOS管和N-MOS管" class="headerlink" title="P-MOS管和N-MOS管"></a>P-MOS管和N-MOS管</h3><p>图中3所示的为 P-MOS 管和 N-MOS 管。GPIO引脚线路经过两个保护二极管后，向上流向“输入模式”结构，向下流向“输出模式”结构。在输出模式部分，线路经过一个由P-MOS和N-MOS管组成的单元电路。这个结构使GPIO具有了“推挽输出”和“开漏输出”两种模式，这两种模式下面会详细介绍。</p>
+<h3 id="TTL肖特基触发器"><a href="#TTL肖特基触发器" class="headerlink" title="TTL肖特基触发器"></a>TTL肖特基触发器</h3><p>图中4所示的为TTL肖特基触发器。信号经过触发器后，模拟信号转化为0和1的数字信号。但是，当<strong>GPIO引脚作为ADC采集电压的输入通道时，用其“模拟输入”功能，此时信号不再经过触发器进行TTL电平转换</strong>。ADC外设要采集到的原始的模拟信号。补充：当输入电压高于正向阈值电压，输出为高；当输入电压低于负向阈值电压，输出为低；当输入在正负向阈值电压之间，输出不改变。</p>
+<h1 id="GPIO的8种工作模式"><a href="#GPIO的8种工作模式" class="headerlink" title="GPIO的8种工作模式"></a>GPIO的8种工作模式</h1><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GPIO Mode</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>GPIO_Mode_AIN</td>
+<td>模拟输入</td>
+</tr>
+<tr>
+<td>GPIO_Mode_IN_FLOATING</td>
+<td>浮空输入</td>
+</tr>
+<tr>
+<td>GPIO_Mode_IPD</td>
+<td>下拉输入</td>
+</tr>
+<tr>
+<td>GPIO_Mode_IPU</td>
+<td>上拉输入</td>
+</tr>
+<tr>
+<td>GPIO_Mode_Out_OD</td>
+<td>开漏输出</td>
+</tr>
+<tr>
+<td>GPIO_Mode_Out_PP</td>
+<td>推挽输出</td>
+</tr>
+<tr>
+<td>GPIO_Mode_AF_OD</td>
+<td>复用开漏输出</td>
+</tr>
+<tr>
+<td>GPIO_Mode_AF_PP</td>
+<td>复用推挽输出</td>
+</tr>
+</tbody></table>
+<h2 id="模拟状态-输入输出"><a href="#模拟状态-输入输出" class="headerlink" title="模拟状态(输入输出)"></a>模拟状态(输入输出)</h2><h3 id="模拟输入状态"><a href="#模拟输入状态" class="headerlink" title="模拟输入状态"></a>模拟输入状态</h3><p>在模拟输入状态下，I&#x2F;O引脚的配置旨在最小化对模拟信号的干扰：</p>
+<ol>
+<li><strong>无上拉或下拉电阻</strong>：引脚不连接任何上拉或下拉电阻，以避免对模拟信号造成不必要的负载或偏置。</li>
+<li><strong>输出驱动器断路</strong>：P-MOS和N-MOS管均处于断路状态，确保模拟信号路径不受数字输出驱动器的影响。</li>
+<li><strong>TTL二极管断路</strong>：TTL触发器不参与工作，进一步减少对模拟信号的潜在干扰。</li>
+</ol>
+<p>在这种配置下，数字信号的读取可能不可用，因为模拟输入模式主要关注模拟信号的完整性和准确性。</p>
+<h3 id="模拟输出状态"><a href="#模拟输出状态" class="headerlink" title="模拟输出状态"></a>模拟输出状态</h3><p>模拟输出功能通常仅限于特定的I&#x2F;O引脚：</p>
+<ul>
+<li>只有设计用于模拟输出的引脚可以接入数字模拟转换器（DAC），用于生成模拟信号。</li>
+</ul>
+<p>在模拟输出模式下，引脚不用于数字信号的输出，专注于模拟信号的生成和传输。</p>
+<p><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Analog_Structure_1.png" alt="GPIO模拟状态图片"><br><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Analog_Structure_2.png" alt="GPIO的模拟输出输入状态"></p>
+<h2 id="输入模式"><a href="#输入模式" class="headerlink" title="输入模式"></a>输入模式</h2><p>I&#x2F;O引脚可以配置为以下三种输入模式：</p>
+<ol>
+<li><strong>浮空模式</strong>：在这种模式下，引脚不连接任何上拉或下拉电阻，其电平状态完全由外部电路决定。</li>
+<li><strong>上拉模式</strong>：配置为上拉模式时，内部或外部的上拉电阻将引脚电平拉高至高电平状态。</li>
+<li><strong>下拉模式</strong>：在下拉模式下，内部或外部的下拉电阻将引脚电平拉低至低电平状态。</li>
+</ol>
+<h3 id="输出驱动器"><a href="#输出驱动器" class="headerlink" title="输出驱动器"></a>输出驱动器</h3><p>在输入模式下输出驱动器配置为高阻态（断路状态）时，引脚不输出任何电平。</p>
+<h3 id="TTL触发器"><a href="#TTL触发器" class="headerlink" title="TTL触发器"></a>TTL触发器</h3><p>它提供抗噪声能力，确保输入信号必须跨越特定阈值才能改变读取状态，减少因噪声引起的误读。</p>
+<h3 id="读取输入数据寄存器"><a href="#读取输入数据寄存器" class="headerlink" title="读取输入数据寄存器"></a>读取输入数据寄存器</h3><p>I&#x2F;O引脚的状态会在每个AHB时钟周期被采样，并存储在输入数据寄存器中。这允许微控制器实时监测引脚状态，确保能够获取最新的输入信号状态。通过读取输入数据寄存器，可以获得I&#x2F;O引脚的当前状态，这反映了外部信号或内部连接的实时状态。</p>
+<p><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Input_Structure.png" alt="GPIO输入模式结构"></p>
+<h2 id="输出模式"><a href="#输出模式" class="headerlink" title="输出模式"></a>输出模式</h2><p>输出模式包含开漏和推挽输出模式，以适应不同的应用需求。</p>
+<h3 id="开漏模式"><a href="#开漏模式" class="headerlink" title="开漏模式"></a>开漏模式</h3><ul>
+<li><strong>输出低电平</strong>：在输出寄存器中设置为“0”会使N-MOS晶体管导通，从而将输出引脚拉低至接地。</li>
+<li><strong>高阻态</strong>：设置为“1”则使输出引脚处于高阻态（Hi-Z），这意味着输出引脚不连接到任何固定的电平，P-MOS晶体管不会导通。</li>
+</ul>
+<h3 id="推挽模式"><a href="#推挽模式" class="headerlink" title="推挽模式"></a>推挽模式</h3><ul>
+<li><strong>输出低电平</strong>：在输出寄存器中设置为“0”同样会使N-MOS晶体管导通，拉低输出引脚。</li>
+<li><strong>输出高电平</strong>：设置为“1”则使P-MOS晶体管导通，从而拉高输出引脚。</li>
+</ul>
+<h3 id="施密特触发器的输入功能"><a href="#施密特触发器的输入功能" class="headerlink" title="施密特触发器的输入功能"></a>施密特触发器的输入功能</h3><p>即使端口被配置为输出模式，施密特触发器的输入功能仍然可以激活。这提供了一定程度的滤波和降噪效果，意味着端口可以响应输入信号的电平变化，尽管它当前被配置为主输出。</p>
+<h3 id="上拉和下拉电阻"><a href="#上拉和下拉电阻" class="headerlink" title="上拉和下拉电阻"></a>上拉和下拉电阻</h3><p>根据GPIOx_PUPDR（端口上下拉寄存器）中的配置，上拉或下拉电阻会被激活。这些电阻为端口提供了默认的电平，防止端口浮空，从而增强了端口的稳定性和抗干扰能力。</p>
+<h3 id="输入数据寄存器"><a href="#输入数据寄存器" class="headerlink" title="输入数据寄存器"></a>输入数据寄存器</h3><p>通过读取输入数据寄存器，可以获得I&#x2F;O引脚的当前状态。这反映了外部信号或内部连接的状态，对于实时监测和响应外部事件至关重要。</p>
+<h3 id="输出数据寄存器"><a href="#输出数据寄存器" class="headerlink" title="输出数据寄存器"></a>输出数据寄存器</h3><p>读取输出数据寄存器会返回最后写入该寄存器的值。这意味着，无论输出引脚的实际电平如何，读取操作都会返回最近一次写入输出寄存器的逻辑值，这对于确保数据的一致性和可预测性非常重要。</p>
+<p><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Output_Structure.png" alt="GPIO输出图片"></p>
+<h2 id="复用模式"><a href="#复用模式" class="headerlink" title="复用模式"></a>复用模式</h2><p>当STM32微控制器的I&#x2F;O端口配置为复用功能模式时，输出缓冲器可以设置为开漏或推挽模式，以适应不同的应用需求。施密特触发器和弱上拉&#x2F;下拉电阻的应用，以确保信号的稳定性和通信的可靠性。这些特性使得STM32微控制器非常适合用于复杂的嵌入式系统设计。</p>
+<h3 id="开漏与推挽模式"><a href="#开漏与推挽模式" class="headerlink" title="开漏与推挽模式"></a>开漏与推挽模式</h3><ul>
+<li><strong>开漏模式</strong>：在此模式下，输出缓冲器只能拉低输出电平，需要外部上拉电阻来实现高电平输出。这种配置常用于需要多个设备共享同一信号线的场景，如I2C总线。</li>
+<li><strong>推挽模式</strong>：推挽模式允许输出缓冲器提供明确的高电平和低电平输出，适用于需要直接驱动负载或提供较强信号驱动能力的应用。</li>
+</ul>
+<h3 id="输出缓冲器驱动"><a href="#输出缓冲器驱动" class="headerlink" title="输出缓冲器驱动"></a>输出缓冲器驱动</h3><p>输出缓冲器由外设如USART、SPI、I2C等的信号驱动，包括传输使能信号和数据信号。这些外设通过复用功能模式控制I&#x2F;O端口，实现数据的发送和接收。</p>
+<h3 id="施密特触发器输入"><a href="#施密特触发器输入" class="headerlink" title="施密特触发器输入"></a>施密特触发器输入</h3><p>施密特触发器在复用功能模式下被激活，提供抗噪声能力，确保输入信号的稳定性。这对于高速通信接口中的信号完整性至关重要。</p>
+<h3 id="弱上拉和下拉电阻"><a href="#弱上拉和下拉电阻" class="headerlink" title="弱上拉和下拉电阻"></a>弱上拉和下拉电阻</h3><p>根据GPIOx_PUPDR（端口上下拉寄存器）中的配置，弱上拉或下拉电阻可能会被激活。这些电阻为引脚提供默认电平，防止悬空，增强信号的稳定性。</p>
+<h3 id="数据采样"><a href="#数据采样" class="headerlink" title="数据采样"></a>数据采样</h3><p>I&#x2F;O引脚上的数据会在每个AHB（高级高性能总线）时钟周期被采样，并存储在输入数据寄存器中。这允许微控制器实时监测引脚状态。</p>
+<h3 id="读取输入数据寄存器-1"><a href="#读取输入数据寄存器-1" class="headerlink" title="读取输入数据寄存器"></a>读取输入数据寄存器</h3><p>通过读取输入数据寄存器，可以获得I&#x2F;O引脚的当前状态。这对于复用功能模式下的输入信号读取非常重要，因为这些信号通常用于外设的通信和控制。</p>
+<p><img src="/img/Introduction_Embedded_Systems/1_GPIO/GPIO_Alternate_Structure.png" alt="GPIO复用模式结构"></p>
+<h1 id="推挽和开漏的总结"><a href="#推挽和开漏的总结" class="headerlink" title="推挽和开漏的总结"></a>推挽和开漏的总结</h1><h2 id="推挽输出结构及其应用"><a href="#推挽输出结构及其应用" class="headerlink" title="推挽输出结构及其应用"></a>推挽输出结构及其应用</h2><p>推挽输出结构是一种常见的电路设计，其中两个参数相同的三极管或MOSFET分别受两互补信号控制，确保在任何时刻只有一个三极管或MOSFET导通，而另一个处于截止状态。这种设计使得高低电平的输出完全由电路的控制信号决定。</p>
+<h3 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h3><p>在推挽电路中，两个对称的功率开关管交替工作，每次只有一个导通，从而实现正负半周期的波形放大。这种工作方式具有以下优势：</p>
+<ul>
+<li><strong>低导通损耗</strong>：由于每次只有一个开关管导通，因此导通损耗较小。</li>
+<li><strong>高效率</strong>：交替导通的方式提高了电路的整体效率。</li>
+<li><strong>双向电流驱动能力</strong>：推挽输出既可以向负载提供电流（灌电流），也可以从负载抽取电流（抽电流）。</li>
+</ul>
+<h3 id="典型应用场景"><a href="#典型应用场景" class="headerlink" title="典型应用场景"></a>典型应用场景</h3><p>推挽输出模式特别适用于以下场合：</p>
+<ol>
+<li><strong>高速开关状态切换</strong>：在需要快速切换输出电平的应用中，推挽输出能够提供快速的响应。</li>
+<li><strong>负载能力要求高</strong>：推挽输出提高了电路的负载能力，适合驱动较大功率的负载。</li>
+</ol>
+<p>在STM32微控制器的应用中，推挽输出模式是首选，除非特定场合需要使用开漏模式。推挽模式提供了更好的性能，尤其是在需要输出0V和3.3V电平且要求高速切换的应用中。</p>
+<h2 id="开漏输出（Open-Drain-Source）的特性与应用"><a href="#开漏输出（Open-Drain-Source）的特性与应用" class="headerlink" title="开漏输出（Open Drain&#x2F;Source）的特性与应用"></a>开漏输出（Open Drain&#x2F;Source）的特性与应用</h2><p>开漏输出是一种特殊的数字输出方式，它只能输出强低电平信号，而高电平信号则需要通过外部上拉电阻来实现。在这种配置下，输出端类似于三极管的集电极或MOSFET的漏极，仅在输出低电平时导通，而在输出高电平时呈现高阻态，适用于多种通信协议和电平转换场景。</p>
+<h3 id="电流驱动能力"><a href="#电流驱动能力" class="headerlink" title="电流驱动能力"></a>电流驱动能力</h3><p>开漏输出适合于电流驱动的应用，因为它在低电平状态下能够吸收较大的电流（通常在20mA以内），这使得它在需要驱动较大电流负载时非常有用。</p>
+<h3 id="典型应用场景-1"><a href="#典型应用场景-1" class="headerlink" title="典型应用场景"></a>典型应用场景</h3><ol>
+<li><strong>I2C和SMBus通信</strong>：开漏输出常用于I2C和SMBus等总线通信协议，这些协议需要“线与”（wire-AND）逻辑来实现多设备间的通信。</li>
+<li><strong>电平转换</strong>：在电平不匹配的场合，例如需要将GPIO输出从3.3V提升至5V，可以通过外部上拉电阻和5V电源来实现。当GPIO输出高阻态时，上拉电阻和电源共同作用，向外提供5V的高电平。</li>
+</ol>
+<h3 id="上拉电阻的选择"><a href="#上拉电阻的选择" class="headerlink" title="上拉电阻的选择"></a>上拉电阻的选择</h3><p>选择外部上拉电阻时需要权衡功耗和响应速度：</p>
+<ul>
+<li><strong>大电阻</strong>：可以减少功耗，但会增加电路的响应时间，因为较大的电阻会与寄生电容一起影响电路的充放电速度，从而影响信号的时序。</li>
+<li><strong>小电阻</strong>：可以提高响应速度，但会增加功耗。</li>
+</ul>
+<p>在设计I2C等通信接口时，需要特别注意上拉电阻的选择，以确保信号的稳定性和通信的可靠性。</p>
+<p><strong>正确选择外部上拉电阻对于确保系统性能至关重要。</strong></p>
+<h1 id="STM32-GPIO的默认状态及配置建议"><a href="#STM32-GPIO的默认状态及配置建议" class="headerlink" title="STM32 GPIO的默认状态及配置建议"></a>STM32 GPIO的默认状态及配置建议</h1><h2 id="STM32-GPIO的默认状态"><a href="#STM32-GPIO的默认状态" class="headerlink" title="STM32 GPIO的默认状态"></a>STM32 GPIO的默认状态</h2><p>STM32微控制器在上电复位后，GPIO引脚的默认状态通常是浮空输入模式。这意味着，如果没有进行任何配置，引脚的电平状态将由外部电路决定。这种设计允许引脚在不消耗电流的情况下保持高阻态，从而降低功耗。</p>
+<h2 id="配置GPIO的建议"><a href="#配置GPIO的建议" class="headerlink" title="配置GPIO的建议"></a>配置GPIO的建议</h2><p>虽然在某些情况下，STM32的GPIO引脚在未配置时可能会表现为低电平输出，但这并不是一个可靠的默认行为。实际的默认状态可能会因芯片设计的不同而有所变化，也可能受到外部电路的影响。因此，依赖于默认状态来实现特定功能是不推荐的。<br>为了确保STM32系统在上电后能够按照预期工作，以下是一些关于GPIO配置的建议：</p>
+<ol>
+<li><p><strong>明确设置初始电平状态</strong>：在系统初始化代码中，明确设置GPIO引脚的初始电平状态，再配置进行GPIO初始化。这可以确保在系统启动时，GPIO引脚的行为符合设计要求。</p>
+</li>
+<li><p><strong>考虑功耗</strong>：在设计低功耗应用时，可以考虑将不使用的GPIO配置为模拟输入模式，以进一步降低功耗。（参考安富莱的教程中的相关测试）</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" rel="tag"># 嵌入式入门</a>
+              <a href="/tags/%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" rel="tag"># 基础概念</a>
+              <a href="/tags/gpio/" rel="tag"># gpio</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/09/20/Introduction_Embedded_Systems/0_preface/" rel="prev" title="嵌入式入门--基础概念：0 前言">
+                  <i class="fa fa-angle-left"></i> 嵌入式入门--基础概念：0 前言
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/09/23/Introduction_Embedded_Systems/2.1_NVIC/" rel="next" title="嵌入式入门--基础概念：2.1 NVIC">
+                  嵌入式入门--基础概念：2.1 NVIC <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Ryan</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">11k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10 分钟</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org//" rel="noopener" target="_blank">NexT.undefined</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

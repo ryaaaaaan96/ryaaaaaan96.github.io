@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"ryaaaaaan96.github.io","root":"/","images":"/images","darkmode":false,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"hide","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="嵌入式开发和传统意义上有很大区别，在嵌入式开发中需要更加深入硬件底层逻辑才能完成，本系列主要介绍嵌入式中一些必备的基础知识。 本文主要介绍一些嵌入式相关的零散知识点和暂时不成体系的知识点，随时记录，知识点成体系后会将其移出本篇文章内容。 嵌入式系统简介嵌入式系统是将软件、硬件、传感器等集成到一个芯片或模块中的计算机系统。与通用计算机系统相比，嵌入式系统通常更加专用，用于控制或监视特定设备。嵌入式系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="嵌入式入门--基础概念：0 前言">
+<meta property="og:url" content="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/0_preface/index.html">
+<meta property="og:site_name" content="Ryan的技术博客">
+<meta property="og:description" content="嵌入式开发和传统意义上有很大区别，在嵌入式开发中需要更加深入硬件底层逻辑才能完成，本系列主要介绍嵌入式中一些必备的基础知识。 本文主要介绍一些嵌入式相关的零散知识点和暂时不成体系的知识点，随时记录，知识点成体系后会将其移出本篇文章内容。 嵌入式系统简介嵌入式系统是将软件、硬件、传感器等集成到一个芯片或模块中的计算机系统。与通用计算机系统相比，嵌入式系统通常更加专用，用于控制或监视特定设备。嵌入式系">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-09-20T03:17:19.000Z">
+<meta property="article:modified_time" content="2024-10-09T23:38:36.843Z">
+<meta property="article:author" content="Ryan">
+<meta property="article:tag" content="嵌入式入门">
+<meta property="article:tag" content="基础概念">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/0_preface/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/0_preface/","path":"2024/09/20/Introduction_Embedded_Systems/0_preface/","title":"嵌入式入门--基础概念：0 前言"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>嵌入式入门--基础概念：0 前言 | Ryan的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Ryan的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">嵌入式系统简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">嵌入式系统的启动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9EXIP%E8%AE%BE%E5%A4%87%E5%90%AF%E5%8A%A8%E5%8E%9F%E7%90%86"><span class="nav-number">2.0.1.</span> <span class="nav-text">非XIP设备启动原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">2.0.2.</span> <span class="nav-text">嵌入式系统的启动过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7"><span class="nav-number">3.</span> <span class="nav-text">嵌入式开发实用技巧</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text">结论</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ryan</p>
+  <div class="site-description" itemprop="description">技术记录</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://ryaaaaaan96.github.io/2024/09/20/Introduction_Embedded_Systems/0_preface/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ryan">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ryan的技术博客">
+      <meta itemprop="description" content="技术记录">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="嵌入式入门--基础概念：0 前言 | Ryan的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          嵌入式入门--基础概念：0 前言
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-09-20 11:17:19" itemprop="dateCreated datePublished" datetime="2024-09-20T11:17:19+08:00">2024-09-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-10-10 07:38:36" itemprop="dateModified" datetime="2024-10-10T07:38:36+08:00">2024-10-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" itemprop="url" rel="index"><span itemprop="name">嵌入式入门</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" itemprop="url" rel="index"><span itemprop="name">基础概念</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>1.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>1 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>嵌入式开发和传统意义上有很大区别，在嵌入式开发中需要更加深入硬件底层逻辑才能完成，本系列主要介绍嵌入式中一些必备的基础知识。</p>
+<p>本文主要介绍一些嵌入式相关的零散知识点和暂时不成体系的知识点，随时记录，知识点成体系后会将其移出本篇文章内容。</p>
+<h1 id="嵌入式系统简介"><a href="#嵌入式系统简介" class="headerlink" title="嵌入式系统简介"></a>嵌入式系统简介</h1><p>嵌入式系统是将软件、硬件、传感器等集成到一个芯片或模块中的计算机系统。与通用计算机系统相比，嵌入式系统通常更加专用，用于控制或监视特定设备。嵌入式系统的核心特点是高度集成和优化，以适应特定的应用需求。</p>
+<h1 id="嵌入式系统的启动方式"><a href="#嵌入式系统的启动方式" class="headerlink" title="嵌入式系统的启动方式"></a>嵌入式系统的启动方式</h1><p>嵌入式系统支持多种启动方式，包括但不限于XIP（eXecute In Place，即在存储介质上直接执行代码）和非XIP设备启动。例如，ARM架构的板子可以支持从Nor Flash、SD卡、SPI Flash、UART、USB、网卡等多种设备启动。</p>
+<h3 id="非XIP设备启动原理"><a href="#非XIP设备启动原理" class="headerlink" title="非XIP设备启动原理"></a>非XIP设备启动原理</h3><p>尽管CPU无法直接从非XIP设备执行代码，但可以通过以下步骤实现启动：</p>
+<ol>
+<li><strong>初始化阶段</strong>：CPU首先运行内置ROM中的程序，这个程序是XIP设备。</li>
+<li><strong>硬件设置</strong>：初始化时钟、内存和其他外设，确保系统稳定运行。</li>
+<li><strong>程序加载</strong>：从非XIP设备（如SD卡）读取程序到内存（如片内RAM或DDR）。</li>
+<li><strong>执行程序</strong>：在内存中执行加载的程序。</li>
+</ol>
+<h3 id="嵌入式系统的启动过程"><a href="#嵌入式系统的启动过程" class="headerlink" title="嵌入式系统的启动过程"></a>嵌入式系统的启动过程</h3><p>启动过程可以分为以下几个关键步骤：</p>
+<p>a. <strong>硬件初始化</strong>：</p>
+<ul>
+<li><strong>时钟设置</strong>：确保CPU和外设以正确的速度运行。</li>
+<li><strong>内存初始化</strong>：特别是对于DDR，需要特定的初始化过程才能使用。</li>
+</ul>
+<p>b. <strong>程序复制</strong>：</p>
+<ul>
+<li><strong>启动设备选择</strong>：可以通过跳线或固件设置来选择启动设备。</li>
+<li><strong>内存地址和长度</strong>：程序通常包含头部信息，指示复制到内存的地址和长度。</li>
+</ul>
+<p>c. <strong>程序执行</strong>：</p>
+<ul>
+<li>一旦程序被复制到内存，CPU将开始执行内存中的程序。</li>
+</ul>
+<blockquote>
+<p><strong>支持那么多的启动方式，SD卡、SPI FLASH、USB DISK，怎么选择？</strong><br>1 通过跳线，选择某个设备<br>2 通过跳线，选择一个设备列表，按列表顺序逐个尝试<br>3 不让客户选择，按固定顺序逐个尝试</p>
+</blockquote>
+<blockquote>
+<p><strong>内存那么大，把程序从SD卡等设备，复制到内存哪个位置？复制多长？</strong><br>1 烧写在SD卡等设备上的程序，含有一个头部信息，里面指定了内存地址和长度；<br>2 不给客户选择，程序被复制到内存固定的位置，长度也固定。</p>
+</blockquote>
+<blockquote>
+<p><strong>程序在SD卡或Flash上怎么存？</strong><br>1 原始二进制(raw bin)<br>2 作为一个文件保存在分区里</p>
+</blockquote>
+<h1 id="嵌入式开发实用技巧"><a href="#嵌入式开发实用技巧" class="headerlink" title="嵌入式开发实用技巧"></a>嵌入式开发实用技巧</h1><ol>
+<li><strong>内存管理</strong>：在资源受限的环境中，避免使用标准库的<code>malloc</code>，因为它可能不适合小内存系统。</li>
+<li><strong>内存分配检查</strong>：在使用<code>malloc</code>分配内存后，始终检查返回值是否为<code>NULL</code>。</li>
+<li><strong>外设时钟管理</strong>：在操作任何外设之前，确保已经开启了相应的时钟，以避免访问未初始化的硬件。</li>
+</ol>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>嵌入式系统的开发需要对硬件有深入的理解，特别是在启动过程中。了解不同启动方式的原理和内存管理技巧对于开发高效、可靠的嵌入式系统至关重要。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" rel="tag"># 嵌入式入门</a>
+              <a href="/tags/%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/" rel="tag"># 基础概念</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/09/20/Introduction_Embedded_Systems/1_GPIO/" rel="next" title="嵌入式入门--基础概念：1 GPIO">
+                  嵌入式入门--基础概念：1 GPIO <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Ryan</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">11k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">10 分钟</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org//" rel="noopener" target="_blank">NexT.undefined</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
