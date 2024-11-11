@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"ryaaaaaan96.github.io","root":"/","images":"/images","darkmode":false,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"hide","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="后续增加编译过程的介绍（编译，内存分配） 在当今的嵌入式系统设计中，内存不仅是宝贵的资源，也是性能提升的关键瓶颈。随着技术的发展，单片机的内存容量不断扩大，为应用程序提供了更多的运行空间。然而，这种增长也带来了新的挑战：如何更有效地利用这些内存资源，以实现更快的数据处理速度和更高的程序响应性。传统的内存加载方案，往往采用简单的线性加载方式，这在面对复杂的应用程序时，往往会导致内存访问延迟和资源浪费">
+<meta property="og:type" content="article">
+<meta property="og:title" content="嵌入式入门--进阶技术：1 编译过程">
+<meta property="og:url" content="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/1_compile_process/index.html">
+<meta property="og:site_name" content="Ryan的技术博客">
+<meta property="og:description" content="后续增加编译过程的介绍（编译，内存分配） 在当今的嵌入式系统设计中，内存不仅是宝贵的资源，也是性能提升的关键瓶颈。随着技术的发展，单片机的内存容量不断扩大，为应用程序提供了更多的运行空间。然而，这种增长也带来了新的挑战：如何更有效地利用这些内存资源，以实现更快的数据处理速度和更高的程序响应性。传统的内存加载方案，往往采用简单的线性加载方式，这在面对复杂的应用程序时，往往会导致内存访问延迟和资源浪费">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E5%8A%A0%E8%BD%BD%E9%85%8D%E7%BD%AE.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%87%BD%E6%95%B0%E5%AD%98%E5%82%A8%E4%BD%8D%E7%BD%AE%E8%A7%A3%E6%9E%90.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E6%96%87%E4%BB%B6%E6%94%BE%E5%85%A5ram.png">
+<meta property="article:published_time" content="2024-10-08T15:10:57.000Z">
+<meta property="article:modified_time" content="2024-10-10T04:49:19.136Z">
+<meta property="article:author" content="Ryan">
+<meta property="article:tag" content="嵌入式入门">
+<meta property="article:tag" content="进阶技术">
+<meta property="article:tag" content="编译原理">
+<meta property="article:tag" content="分散内存加载">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90.png">
+
+
+<link rel="canonical" href="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/1_compile_process/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/1_compile_process/","path":"2024/10/08/Advanced_Embedded_Systems/1_compile_process/","title":"嵌入式入门--进阶技术：1 编译过程"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>嵌入式入门--进阶技术：1 编译过程 | Ryan的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Ryan的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8Ekeil%E7%9A%84%E5%88%86%E6%95%A3%E5%86%85%E5%AD%98%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.</span> <span class="nav-text">基于keil的分散内存加载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gcc%E5%AE%9E%E7%8E%B0%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E5%8A%A0%E8%BD%BD"><span class="nav-number">2.</span> <span class="nav-text">gcc实现分散文件加载</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ryan</p>
+  <div class="site-description" itemprop="description">技术记录</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/1_compile_process/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ryan">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ryan的技术博客">
+      <meta itemprop="description" content="技术记录">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="嵌入式入门--进阶技术：1 编译过程 | Ryan的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          嵌入式入门--进阶技术：1 编译过程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-10-08 23:10:57" itemprop="dateCreated datePublished" datetime="2024-10-08T23:10:57+08:00">2024-10-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-10-10 12:49:19" itemprop="dateModified" datetime="2024-10-10T12:49:19+08:00">2024-10-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" itemprop="url" rel="index"><span itemprop="name">嵌入式入门</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/%E8%BF%9B%E9%98%B6%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">进阶技术</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>8.5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>8 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>后续增加编译过程的介绍（编译，内存分配）</p>
+<p>在当今的嵌入式系统设计中，内存不仅是宝贵的资源，也是性能提升的关键瓶颈。随着技术的发展，单片机的内存容量不断扩大，为应用程序提供了更多的运行空间。然而，这种增长也带来了新的挑战：如何更有效地利用这些内存资源，以实现更快的数据处理速度和更高的程序响应性。传统的内存加载方案，往往采用简单的线性加载方式，这在面对复杂的应用程序时，往往会导致内存访问延迟和资源浪费。为了克服这些限制，分散内存加载技术成为了提升单片机性能的有效手段。</p>
+<p>分散内存加载技术的核心思想是将程序的不同部分，根据其功能和访问模式，分配到内存中的最佳位置。这种方法不仅可以减少内存访问时间，还可以提高内存的使用效率，从而提升单片机的运行速度和稳定性。例如，在高性能的STM32H7系列单片机中，存在5块以上的SRAM区域，每一块都有其独特的特性和用途。这就需要开发者根据应用程序的需求，精心设计内存分配策略，确保关键任务能够快速执行，同时保持系统的稳定运行。</p>
+<p>对于某些对执行速度有特殊要求的代码，我们可以通过将其放置在RAM中来实现更快的运行速度。这种技术在实时性要求高或对响应时间敏感的应用中尤为重要。通过这种方式，我们可以确保那些对性能要求最高的函数和数据结构能够被尽可能快地访问。通过深入理解分散内存加载的原理和实践，开发者可以更好地控制内存资源，设计出更加高效和可靠的单片机应用程序。这种技术的应用，无疑将为嵌入式系统的性能优化开辟新的道路。它不仅能够帮助开发者解决内存管理中的难题，还能够提升整个系统的性能，满足日益复杂的应用需求。</p>
+<h1 id="基于keil的分散内存加载"><a href="#基于keil的分散内存加载" class="headerlink" title="基于keil的分散内存加载"></a>基于keil的分散内存加载</h1><p>keil的分散文件中分为加载域和运行域，加载域就是程序在 Flash 中的实际存储，而运行域是芯片上电后的运行状态，通过下面的框图可以有一个感性的认识：<br><img src="/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90.png" alt="分散文件解析"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">; *************************************************************</span><br><span class="line">; *** Scatter-Loading Description File generated by uVision ***</span><br><span class="line">; *************************************************************</span><br><span class="line"></span><br><span class="line">LR_IROM1 0x08020000 0x001E0000  &#123;    ; load region size_region</span><br><span class="line">  ER_IROM1 0x08020000 0x001E0000  &#123;  ; load address = execution address</span><br><span class="line">    *.o (RESET, +First)</span><br><span class="line">    *(InRoot$$Sections)</span><br><span class="line">    .ANY (+RO)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  RW_IRAM1 0x00000000 0x00010000  &#123;  ; RW data - 64KB ITCM</span><br><span class="line">    *.o (RAM_ITCM) </span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  RW_IRAM2 0x20000000 0x00020000  &#123;  ; RW data - 128KB DTCM</span><br><span class="line">    *(.RAM_DTCM) </span><br><span class="line">    .ANY (+RW +ZI)</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  RW_IRAM3 0x24000000 0x00080000  &#123;  ; RW data - 512KB AXI SRAM</span><br><span class="line">    *(.RAM_AXI) </span><br><span class="line">    .ANY (+RW +ZI)</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  RW_IRAM4 0x30000000 0x00048000  &#123;  ; RW data - 128KB SRAM1(0x30000000) + 128KB SRAM2(0x3002 0000) + 32KB SRAM3(0x30040000)</span><br><span class="line">  ;  *(.RAM_SRAM1_2_3)</span><br><span class="line">    .ANY (+RW +ZI)       </span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  RW_IRAM5 0x38000000 0x00010000  &#123;  ; RW data - 64KB SRAM4(0x38000000)</span><br><span class="line">  ;  *(.RAM_SRAM4)</span><br><span class="line">    .ANY (+RW +ZI)       </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>同时配置 option 的链接选项使用此分散加载文件<br><img src="/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%88%86%E6%95%A3%E6%96%87%E4%BB%B6%E5%8A%A0%E8%BD%BD%E9%85%8D%E7%BD%AE.png" alt="分散文件加载配置"><br>使用方法很简单，依然是使用__attribute__，但是不指定具体地址了，指定 RAM 区，方法如下，仅需加个前缀即可：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/* 定义在 512KB AXI SRAM 里面的变量 */</span><br><span class="line">__attribute__((section (&quot;.RAM_D1&quot;))) uint32_t AXISRAMBuf[10];</span><br><span class="line">__attribute__((section (&quot;.RAM_D1&quot;))) uint16_t AXISRAMCount;</span><br><span class="line">/* 定义在 128KB SRAM1(0x30000000) + 128KB SRAM2(0x30020000) + 32KB SRAM3(0x30040000)里面的变量 */</span><br><span class="line">__attribute__((section (&quot;.RAM_D2&quot;))) uint32_t D2SRAMBuf[10];</span><br><span class="line">__attribute__((section (&quot;.RAM_D2&quot;))) uint16_t D2SRAMount;</span><br><span class="line">/* 定义在 64KB SRAM4(0x38000000)里面的变量 */</span><br><span class="line">__attribute__((section (&quot;.RAM_D3&quot;))) uint32_t D3SRAMBuf[10];</span><br><span class="line">__attribute__((section (&quot;.RAM_D3&quot;))) uint16_t D3SRAMCount;</span><br></pre></td></tr></table></figure>
+<p>如果想代码运行在ram中，则有两种方式，第一种直接在sct文件中定义一个区域用于运行代码的区域，<br><img src="/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E5%87%BD%E6%95%B0%E5%AD%98%E5%82%A8%E4%BD%8D%E7%BD%AE%E8%A7%A3%E6%9E%90.png" alt="函数存储位置解析"><br>然后直接定义函数用__attribute__((section(“.RAM_ITCM”)))将需要放入其中的函数进行前缀修饰</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((section(&quot;.RAM_ITCM&quot;))) void SYS_init(void)</span><br></pre></td></tr></table></figure>
+<p>编译过后在 .map 文件中进行查看就可以看到被保存到了设定区域内</p>
+<p>还有另外一种方式进行定义使用armcc的专用宏进行定义</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#pragma arm section code = &quot;.RAM_ITCM&quot;</span><br><span class="line">// 代码</span><br><span class="line">#pragma arm section</span><br></pre></td></tr></table></figure>
+
+
+<p>keil还有一种将整个文件放入某个区域的方式，右键需要放入ram的 .c文件-&gt;Options for File，按照需要选择IRAM。（注意此时不能使用分散文件加载功能，不然会导致分散内存加载失败）<br><img src="/img/Advanced_Embedded_Systems/1_%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/%E6%96%87%E4%BB%B6%E6%94%BE%E5%85%A5ram.png" alt="文件放入ram"></p>
+<h1 id="gcc实现分散文件加载"><a href="#gcc实现分散文件加载" class="headerlink" title="gcc实现分散文件加载"></a>gcc实现分散文件加载</h1><p>GCC的文件链接使用的是ld文件，ld文件可以定义相关区域，然后在代码中使用__attribute__来定义相关内存加载区域</p>
+<p>ld文件解析<br>MEMORY区块的定义和属性<br>SECTIONS的定义及其内部段的详解 (.text, .data, .bss等)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br></pre></td><td class="code"><pre><span class="line">/*******************************************************************/</span><br><span class="line">/*                                                                 */</span><br><span class="line">/* This file is automatically generated by linker script generator.*/</span><br><span class="line">/*                                                                 */</span><br><span class="line">/* Version: 2019.1                                                 */</span><br><span class="line">/*                                                                 */</span><br><span class="line">/* Copyright (c) 2010-2016 Xilinx, Inc.  All rights reserved.      */</span><br><span class="line">/*                                                                 */</span><br><span class="line">/* Description : Cortex-A9 Linker Script                           */</span><br><span class="line">/*                                                                 */</span><br><span class="line">/*******************************************************************/</span><br><span class="line"></span><br><span class="line">_STACK_SIZE = DEFINED(_STACK_SIZE) ? _STACK_SIZE : 0x2000;</span><br><span class="line">_HEAP_SIZE = DEFINED(_HEAP_SIZE) ? _HEAP_SIZE : 0x2000;</span><br><span class="line"></span><br><span class="line">_ABORT_STACK_SIZE = DEFINED(_ABORT_STACK_SIZE) ? _ABORT_STACK_SIZE : 1024;</span><br><span class="line">_SUPERVISOR_STACK_SIZE = DEFINED(_SUPERVISOR_STACK_SIZE) ? _SUPERVISOR_STACK_SIZE : 2048;</span><br><span class="line">_IRQ_STACK_SIZE = DEFINED(_IRQ_STACK_SIZE) ? _IRQ_STACK_SIZE : 1024;</span><br><span class="line">_FIQ_STACK_SIZE = DEFINED(_FIQ_STACK_SIZE) ? _FIQ_STACK_SIZE : 1024;</span><br><span class="line">_UNDEF_STACK_SIZE = DEFINED(_UNDEF_STACK_SIZE) ? _UNDEF_STACK_SIZE : 1024;</span><br><span class="line"></span><br><span class="line">/* Define Memories in the system */</span><br><span class="line"></span><br><span class="line">MEMORY</span><br><span class="line">&#123;</span><br><span class="line">   axi_bram_ctrl_0_Mem0 : ORIGIN = 0x40000000, LENGTH = 0x2000</span><br><span class="line">   ps7_ddr_0 : ORIGIN = 0x100000, LENGTH = 0x3FF00000</span><br><span class="line">   ps7_qspi_linear_0 : ORIGIN = 0xFC000000, LENGTH = 0x1000000</span><br><span class="line">   ps7_ram_0 : ORIGIN = 0x0, LENGTH = 0x30000</span><br><span class="line">   ps7_ram_1 : ORIGIN = 0xFFFF0000, LENGTH = 0xFE00</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/* Specify the default entry point to the program */</span><br><span class="line"></span><br><span class="line">ENTRY(_vector_table)</span><br><span class="line"></span><br><span class="line">/* Define the sections, and where they are mapped in memory */</span><br><span class="line"></span><br><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line">.text : &#123;</span><br><span class="line">   KEEP (*(.vectors))</span><br><span class="line">   *(.boot)</span><br><span class="line">   *(.text)</span><br><span class="line">   *(.text.*)</span><br><span class="line">   *(.gnu.linkonce.t.*)</span><br><span class="line">   *(.plt)</span><br><span class="line">   *(.gnu_warning)</span><br><span class="line">   *(.gcc_execpt_table)</span><br><span class="line">   *(.glue_7)</span><br><span class="line">   *(.glue_7t)</span><br><span class="line">   *(.vfp11_veneer)</span><br><span class="line">   *(.ARM.extab)</span><br><span class="line">   *(.gnu.linkonce.armextab.*)</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.init : &#123;</span><br><span class="line">   KEEP (*(.init))</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.fini : &#123;</span><br><span class="line">   KEEP (*(.fini))</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.rodata : &#123;</span><br><span class="line">   __rodata_start = .;</span><br><span class="line">   *(.rodata)</span><br><span class="line">   *(.rodata.*)</span><br><span class="line">   *(.gnu.linkonce.r.*)</span><br><span class="line">   __rodata_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.rodata1 : &#123;</span><br><span class="line">   __rodata1_start = .;</span><br><span class="line">   *(.rodata1)</span><br><span class="line">   *(.rodata1.*)</span><br><span class="line">   __rodata1_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.sdata2 : &#123;</span><br><span class="line">   __sdata2_start = .;</span><br><span class="line">   *(.sdata2)</span><br><span class="line">   *(.sdata2.*)</span><br><span class="line">   *(.gnu.linkonce.s2.*)</span><br><span class="line">   __sdata2_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.sbss2 : &#123;</span><br><span class="line">   __sbss2_start = .;</span><br><span class="line">   *(.sbss2)</span><br><span class="line">   *(.sbss2.*)</span><br><span class="line">   *(.gnu.linkonce.sb2.*)</span><br><span class="line">   __sbss2_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.data : &#123;</span><br><span class="line">   __data_start = .;</span><br><span class="line">   *(.data)</span><br><span class="line">   *(.data.*)</span><br><span class="line">   *(.gnu.linkonce.d.*)</span><br><span class="line">   *(.jcr)</span><br><span class="line">   *(.got)</span><br><span class="line">   *(.got.plt)</span><br><span class="line">   __data_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.data1 : &#123;</span><br><span class="line">   __data1_start = .;</span><br><span class="line">   *(.data1)</span><br><span class="line">   *(.data1.*)</span><br><span class="line">   __data1_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.got : &#123;</span><br><span class="line">   *(.got)</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.ctors : &#123;</span><br><span class="line">   __CTOR_LIST__ = .;</span><br><span class="line">   ___CTORS_LIST___ = .;</span><br><span class="line">   KEEP (*crtbegin.o(.ctors))</span><br><span class="line">   KEEP (*(EXCLUDE_FILE(*crtend.o) .ctors))</span><br><span class="line">   KEEP (*(SORT(.ctors.*)))</span><br><span class="line">   KEEP (*(.ctors))</span><br><span class="line">   __CTOR_END__ = .;</span><br><span class="line">   ___CTORS_END___ = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.dtors : &#123;</span><br><span class="line">   __DTOR_LIST__ = .;</span><br><span class="line">   ___DTORS_LIST___ = .;</span><br><span class="line">   KEEP (*crtbegin.o(.dtors))</span><br><span class="line">   KEEP (*(EXCLUDE_FILE(*crtend.o) .dtors))</span><br><span class="line">   KEEP (*(SORT(.dtors.*)))</span><br><span class="line">   KEEP (*(.dtors))</span><br><span class="line">   __DTOR_END__ = .;</span><br><span class="line">   ___DTORS_END___ = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.fixup : &#123;</span><br><span class="line">   __fixup_start = .;</span><br><span class="line">   *(.fixup)</span><br><span class="line">   __fixup_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.eh_frame : &#123;</span><br><span class="line">   *(.eh_frame)</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.eh_framehdr : &#123;</span><br><span class="line">   __eh_framehdr_start = .;</span><br><span class="line">   *(.eh_framehdr)</span><br><span class="line">   __eh_framehdr_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.gcc_except_table : &#123;</span><br><span class="line">   *(.gcc_except_table)</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">. = ALIGN(32);</span><br><span class="line">.shell_command (ALIGN(4)) :</span><br><span class="line">&#123;</span><br><span class="line">    _shell_command_start = .;</span><br><span class="line">    KEEP (*(shellCommand))</span><br><span class="line">    _shell_command_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.mmu_tbl (ALIGN(16384)) : &#123;</span><br><span class="line">   __mmu_tbl_start = .;</span><br><span class="line">   *(.mmu_tbl)</span><br><span class="line">   __mmu_tbl_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.ARM.exidx : &#123;</span><br><span class="line">   __exidx_start = .;</span><br><span class="line">   *(.ARM.exidx*)</span><br><span class="line">   *(.gnu.linkonce.armexidix.*.*)</span><br><span class="line">   __exidx_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.preinit_array : &#123;</span><br><span class="line">   __preinit_array_start = .;</span><br><span class="line">   KEEP (*(SORT(.preinit_array.*)))</span><br><span class="line">   KEEP (*(.preinit_array))</span><br><span class="line">   __preinit_array_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.init_array : &#123;</span><br><span class="line">   __init_array_start = .;</span><br><span class="line">   KEEP (*(SORT(.init_array.*)))</span><br><span class="line">   KEEP (*(.init_array))</span><br><span class="line">   __init_array_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.fini_array : &#123;</span><br><span class="line">   __fini_array_start = .;</span><br><span class="line">   KEEP (*(SORT(.fini_array.*)))</span><br><span class="line">   KEEP (*(.fini_array))</span><br><span class="line">   __fini_array_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.ARM.attributes : &#123;</span><br><span class="line">   __ARM.attributes_start = .;</span><br><span class="line">   *(.ARM.attributes)</span><br><span class="line">   __ARM.attributes_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.sdata : &#123;</span><br><span class="line">   __sdata_start = .;</span><br><span class="line">   *(.sdata)</span><br><span class="line">   *(.sdata.*)</span><br><span class="line">   *(.gnu.linkonce.s.*)</span><br><span class="line">   __sdata_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.sbss (NOLOAD) : &#123;</span><br><span class="line">   __sbss_start = .;</span><br><span class="line">   *(.sbss)</span><br><span class="line">   *(.sbss.*)</span><br><span class="line">   *(.gnu.linkonce.sb.*)</span><br><span class="line">   __sbss_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.tdata : &#123;</span><br><span class="line">   __tdata_start = .;</span><br><span class="line">   *(.tdata)</span><br><span class="line">   *(.tdata.*)</span><br><span class="line">   *(.gnu.linkonce.td.*)</span><br><span class="line">   __tdata_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.tbss : &#123;</span><br><span class="line">   __tbss_start = .;</span><br><span class="line">   *(.tbss)</span><br><span class="line">   *(.tbss.*)</span><br><span class="line">   *(.gnu.linkonce.tb.*)</span><br><span class="line">   __tbss_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.bss (NOLOAD) : &#123;</span><br><span class="line">   __bss_start = .;</span><br><span class="line">   *(.bss)</span><br><span class="line">   *(.bss.*)</span><br><span class="line">   *(.gnu.linkonce.b.*)</span><br><span class="line">   *(COMMON)</span><br><span class="line">   __bss_end = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">_SDA_BASE_ = __sdata_start + ((__sbss_end - __sdata_start) / 2 );</span><br><span class="line"></span><br><span class="line">_SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );</span><br><span class="line"></span><br><span class="line">/* Generate Stack and Heap definitions */</span><br><span class="line"></span><br><span class="line">.heap (NOLOAD) : &#123;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   _heap = .;</span><br><span class="line">   HeapBase = .;</span><br><span class="line">   _heap_start = .;</span><br><span class="line">   . += _HEAP_SIZE;</span><br><span class="line">   _heap_end = .;</span><br><span class="line">   HeapLimit = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">.stack (NOLOAD) : &#123;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   _stack_end = .;</span><br><span class="line">   . += _STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   _stack = .;</span><br><span class="line">   __stack = _stack;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   _irq_stack_end = .;</span><br><span class="line">   . += _IRQ_STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   __irq_stack = .;</span><br><span class="line">   _supervisor_stack_end = .;</span><br><span class="line">   . += _SUPERVISOR_STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   __supervisor_stack = .;</span><br><span class="line">   _abort_stack_end = .;</span><br><span class="line">   . += _ABORT_STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   __abort_stack = .;</span><br><span class="line">   _fiq_stack_end = .;</span><br><span class="line">   . += _FIQ_STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   __fiq_stack = .;</span><br><span class="line">   _undef_stack_end = .;</span><br><span class="line">   . += _UNDEF_STACK_SIZE;</span><br><span class="line">   . = ALIGN(16);</span><br><span class="line">   __undef_stack = .;</span><br><span class="line">&#125; &gt; ps7_ddr_0</span><br><span class="line"></span><br><span class="line">_end = .;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" rel="tag"># 嵌入式入门</a>
+              <a href="/tags/%E8%BF%9B%E9%98%B6%E6%8A%80%E6%9C%AF/" rel="tag"># 进阶技术</a>
+              <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/" rel="tag"># 编译原理</a>
+              <a href="/tags/%E5%88%86%E6%95%A3%E5%86%85%E5%AD%98%E5%8A%A0%E8%BD%BD/" rel="tag"># 分散内存加载</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/10/08/Advanced_Embedded_Systems/3_C_skills/" rel="prev" title="嵌入式入门--进阶技术：3 语言技巧">
+                  <i class="fa fa-angle-left"></i> 嵌入式入门--进阶技术：3 语言技巧
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/10/08/Advanced_Embedded_Systems/0_preface/" rel="next" title="嵌入式入门--进阶技术：0 前言">
+                  嵌入式入门--进阶技术：0 前言 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Ryan</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">23k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">21 分钟</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org//" rel="noopener" target="_blank">NexT.undefined</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"ryaaaaaan96.github.io","root":"/","images":"/images","darkmode":false,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"hide","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="本系列将基于arm，RISC v以及keil gcc进行嵌入式深入学习，前言先介绍一下指令集和代码的的体系结构 指令集分类指令集有四种：复杂指令集（CISC）、精简指令集（RISC）、显示并行指令集（EPIC）、超长指令字指令集（LVIW）  复杂指令集（CISC）：  特点：包含大量指令，包括简单指令和复杂指令，通过微程序控制技术实现，支持更多种寻址方式。 优点：程序员可以使用更高级的指令，使得">
+<meta property="og:type" content="article">
+<meta property="og:title" content="嵌入式入门--进阶技术：2.CPU架构">
+<meta property="og:url" content="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/2_CPU_architecture/index.html">
+<meta property="og:site_name" content="Ryan的技术博客">
+<meta property="og:description" content="本系列将基于arm，RISC v以及keil gcc进行嵌入式深入学习，前言先介绍一下指令集和代码的的体系结构 指令集分类指令集有四种：复杂指令集（CISC）、精简指令集（RISC）、显示并行指令集（EPIC）、超长指令字指令集（LVIW）  复杂指令集（CISC）：  特点：包含大量指令，包括简单指令和复杂指令，通过微程序控制技术实现，支持更多种寻址方式。 优点：程序员可以使用更高级的指令，使得">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/RISC%E4%B9%98%E6%B3%95.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/CISC%E4%B9%98%E6%B3%95.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/armv7%E5%AF%84%E5%AD%98%E5%99%A8.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/M7%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/M0%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81%E5%AF%84%E5%AD%98%E5%99%A8%E6%8C%87%E7%A4%BA.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/%E7%AE%80%E5%8D%95%E5%B1%95%E7%A4%BA.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/A7%E5%AF%84%E5%AD%98%E5%99%A8.png">
+<meta property="og:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/armcc%E5%92%8Cgcc%E7%9A%84%E5%8C%BA%E5%88%AB.png">
+<meta property="article:published_time" content="2024-10-08T15:10:57.000Z">
+<meta property="article:modified_time" content="2024-10-10T04:49:19.136Z">
+<meta property="article:author" content="Ryan">
+<meta property="article:tag" content="嵌入式入门">
+<meta property="article:tag" content="进阶技术">
+<meta property="article:tag" content="CPU架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ryaaaaaan96.github.io/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/RISC%E4%B9%98%E6%B3%95.png">
+
+
+<link rel="canonical" href="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/2_CPU_architecture/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/2_CPU_architecture/","path":"2024/10/08/Advanced_Embedded_Systems/2_CPU_architecture/","title":"嵌入式入门--进阶技术：2.CPU架构"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>嵌入式入门--进阶技术：2.CPU架构 | Ryan的技术博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Ryan的技术博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E9%9B%86%E5%88%86%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">指令集分类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%B0%E4%BB%A3arm%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF%E5%92%8C%E7%89%B9%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">现代arm架构设计思路和特点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#arm-V7%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">arm-V7架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">3.1.</span> <span class="nav-text">寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#xPSR"><span class="nav-number">3.1.1.</span> <span class="nav-text">xPSR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PRIMASK"><span class="nav-number">3.1.2.</span> <span class="nav-text">PRIMASK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CONTROL"><span class="nav-number">3.1.3.</span> <span class="nav-text">CONTROL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B1%87%E7%BC%96%E5%92%8C%E6%9C%BA%E5%99%A8%E7%A0%81"><span class="nav-number">3.2.</span> <span class="nav-text">汇编和机器码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#arm-V8-%E5%92%8C-risc-V"><span class="nav-number">4.</span> <span class="nav-text">arm-V8 和 risc V</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ryan</p>
+  <div class="site-description" itemprop="description">技术记录</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://ryaaaaaan96.github.io/2024/10/08/Advanced_Embedded_Systems/2_CPU_architecture/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ryan">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ryan的技术博客">
+      <meta itemprop="description" content="技术记录">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="嵌入式入门--进阶技术：2.CPU架构 | Ryan的技术博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          嵌入式入门--进阶技术：2.CPU架构
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-10-08 23:10:57" itemprop="dateCreated datePublished" datetime="2024-10-08T23:10:57+08:00">2024-10-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-10-10 12:49:19" itemprop="dateModified" datetime="2024-10-10T12:49:19+08:00">2024-10-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" itemprop="url" rel="index"><span itemprop="name">嵌入式入门</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/%E8%BF%9B%E9%98%B6%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">进阶技术</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本系列将基于arm，RISC v以及keil gcc进行嵌入式深入学习，前言先介绍一下指令集和代码的的体系结构</p>
+<h1 id="指令集分类"><a href="#指令集分类" class="headerlink" title="指令集分类"></a>指令集分类</h1><p>指令集有四种：复杂指令集（CISC）、精简指令集（RISC）、显示并行指令集（EPIC）、超长指令字指令集（LVIW）</p>
+<ol>
+<li><p><strong>复杂指令集（CISC）</strong>：</p>
+<ul>
+<li>特点：包含大量指令，包括简单指令和复杂指令，通过微程序控制技术实现，支持更多种寻址方式。</li>
+<li>优点：程序员可以使用更高级的指令，使得编程更简单。</li>
+<li>缺点：硬件实现复杂，指令执行时间不固定，流水线难以设计。</li>
+</ul>
+</li>
+<li><p><strong>精简指令集（RISC）</strong>：</p>
+<ul>
+<li>特点：指令集简单，指令长度固定，大部分指令在一个时钟周期内完成，增加了通用寄存器，硬布线逻辑控制为主，采用流水线。</li>
+<li>优点：硬件实现简单，指令执行速度快，流水线设计简单。</li>
+<li>缺点：程序员需要编写更多的指令来实现复杂操作，但当前可以通过优化编译器设计解决。</li>
+</ul>
+</li>
+<li><p><strong>显示并行指令集（EPIC）</strong>：</p>
+<ul>
+<li>特点：在RISC的基础上，进一步优化并行处理能力。</li>
+<li>优点：可以同时执行多条指令，提高CPU的并行度和性能。</li>
+<li>缺点：硬件实现更加复杂。</li>
+</ul>
+</li>
+<li><p><strong>超长指令字指令集（LVIW）</strong>：</p>
+<ul>
+<li>特点：指令长度可变，可以在一个指令中包含多个操作。</li>
+<li>优点：可以减少指令数量，提高指令吞吐量。</li>
+<li>缺点：硬件实现复杂，指令调度困难。</li>
+</ul>
+</li>
+</ol>
+<p>对于ARM和x86的对比：</p>
+<ol>
+<li><p><strong>ARM（RISC）</strong>：</p>
+<ul>
+<li>指令集简单，指令长度固定，对于内存只有Load&#x2F;Store操作，大部分指令在一个时钟周期内完成。</li>
+<li>倾向于使用更多的寄存器来存储数据，而不是使用内存中的堆栈。</li>
+<li>硬件实现简单，指令执行速度快，流水线设计简单。</li>
+</ul>
+</li>
+<li><p><strong>x86（CISC）</strong>：</p>
+<ul>
+<li>包含大量指令，包括简单指令和复杂指令。</li>
+<li>某些复杂的指令是通过“微程序”来实现的。</li>
+<li>硬件实现复杂，指令执行时间不固定，流水线难以设计。</li>
+</ul>
+</li>
+</ol>
+<p>总的来说，RISC和CISC各有优缺点，适用于不同的场景。RISC在移动设备和嵌入式系统中应用广泛，而CISC在桌面和服务器领域有优势。随着技术的发展，两者也在不断融合和优化。</p>
+<h1 id="现代arm架构设计思路和特点"><a href="#现代arm架构设计思路和特点" class="headerlink" title="现代arm架构设计思路和特点"></a>现代arm架构设计思路和特点</h1><ol>
+<li><p><strong>桶型移位寄存器</strong>：</p>
+<ul>
+<li>ARM处理器中的桶型移位寄存器（Barrel Shifter）可以在一个时钟周期内完成各种移位操作，包括逻辑左移、逻辑右移、算术右移和循环移位。</li>
+<li>桶型移位寄存器可以处理立即数移位和寄存器移位，这使得移位操作非常快速和高效。</li>
+</ul>
+</li>
+<li><p><strong>并非所有指令都是单周期的</strong>：</p>
+<ul>
+<li>尽管RISC架构倾向于设计单周期指令，但ARM处理器中的一些指令，如内存访问、乘法和除法等，可能需要多个周期来完成。</li>
+<li>这种设计允许ARM处理器在保持指令简单性的同时，实现更复杂的操作。</li>
+</ul>
+</li>
+<li><p><strong>16位Thumb指令集</strong>：</p>
+<ul>
+<li>Thumb指令集是ARM32位指令集的16位压缩形式，旨在减少代码大小，提高内存效率。</li>
+<li>Thumb指令集提供了与32位ARM指令集相同的功能，但占用更少的存储空间。</li>
+</ul>
+</li>
+<li><p><strong>通过指令组合减少分支数目</strong>：</p>
+<ul>
+<li>ARM指令集中的某些指令，如条件执行指令，可以在单个指令中执行多个操作，从而减少分支指令的使用。</li>
+<li>这有助于提高代码的密度和执行效率。</li>
+</ul>
+</li>
+<li><p><strong>增加DSP、SIMD&#x2F;NEON等指令</strong>：</p>
+<ul>
+<li>ARM处理器增加了数字信号处理（DSP）指令，以提高音频、视频和通信应用中的性能。</li>
+<li>单指令多数据（SIMD）或NEON（NEon）指令集提供了对多媒体和信号处理操作的硬件加速，如向量运算和浮点运算。</li>
+</ul>
+</li>
+<li><p><strong>寄存器窗口</strong>：</p>
+<ul>
+<li>ARM处理器通常具有较少的寄存器，但通过寄存器窗口机制，可以有效地管理寄存器资源，提高寄存器的使用效率。</li>
+</ul>
+</li>
+<li><p><strong>条件执行</strong>：</p>
+<ul>
+<li>ARM指令集支持条件执行，这意味着某些指令的执行取决于特定的条件标志，如零标志、负标志等。</li>
+<li>这种设计减少了条件分支指令的使用，提高了代码的执行效率。</li>
+</ul>
+</li>
+<li><p><strong>流水线和超标量</strong>：</p>
+<ul>
+<li>ARM处理器通常采用流水线技术，以提高指令的吞吐率。</li>
+<li>高端ARM处理器可能采用超标量架构，即每个时钟周期可以执行多条指令。</li>
+</ul>
+</li>
+</ol>
+<p>ARM指令集的设计哲学和特点使其在移动设备、嵌入式系统和服务器市场中非常受欢迎，尤其是在能效比和性能方面的优势。随着技术的发展，ARM也在不断地扩展其指令集，以满足不断变化的市场需求。</p>
+<p>eg:乘法运算<code>a = a * b</code></p>
+<p>在RISC中要使用4条汇编指令：<br><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/RISC%E4%B9%98%E6%B3%95.png" alt="RISC 乘法"><br>① 读内存a<br>② 读内存b<br>③ 计算a*b<br>④ 把结果写入内存</p>
+<p>在CISC，实际上会去执行一个“微程序”，在“微程序”里，一样是去执行这4操作：<br><img src="/../img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/CISC%E4%B9%98%E6%B3%95.png" alt="CISC 乘法"><br>① 读内存a<br>② 读内存b<br>③ 计算a*b<br>④ 把结果写入内存</p>
+<h1 id="arm-V7架构"><a href="#arm-V7架构" class="headerlink" title="arm-V7架构"></a>arm-V7架构</h1><h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><p>无论是cortex-M3&#x2F;M4，还是cortex-A7，CPU内部都有R0、R1、……、R15寄存器；<br>它们可以用来“暂存”数据。<br>对于R13、R14、R15，还另有用途：<br>R13：别名SP(Stack Pointer)，栈指针<br>R14：别名LR(Link Register)，用来保存返回地址<br>R15：别名PC(Program Counter)，程序计数器，表示当前指令地址，写入新值即可跳转<br><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/armv7%E5%AF%84%E5%AD%98%E5%99%A8.png" alt="arm V7 寄存器设计"></p>
+<h3 id="xPSR"><a href="#xPSR" class="headerlink" title="xPSR"></a>xPSR</h3><p>xPSR实际上对应3个寄存器：<br>① APSR：Application PSR，应用PSR<br>② IPSR：Interrupt PSR，中断PSR<br>③ EPSR：Exectution PSR，执行PSR<br>这3个寄存器的含义如图所示<br>这3个寄存器，可以单独访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MRS  R0, APSR  ;读APSR</span><br><span class="line">MRS  R0, IPSR    ;读IPSR</span><br><span class="line">MSR  APSR, R0   ;写APSR</span><br></pre></td></tr></table></figure>
+
+<p>这3个寄存器，也可以一次性访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MRS  R0,  PSR  ; 读组合程序状态</span><br><span class="line">MSR  PSR, R0   ; 写组合程序状态</span><br></pre></td></tr></table></figure>
+
+<p>所谓组合程序状态，如下图所示：<br><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/M7%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81.png" alt="程序状态寄存器"></p>
+<p><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/M0%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81.png" alt="M0程序状态寄存器"></p>
+<p><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/%E7%A8%8B%E5%BA%8F%E7%8A%B6%E6%80%81%E5%AF%84%E5%AD%98%E5%99%A8%E6%8C%87%E7%A4%BA.png" alt="程序状态寄存器状态说明"></p>
+<p><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/%E7%AE%80%E5%8D%95%E5%B1%95%E7%A4%BA.png" alt="程序状态简单展示"></p>
+<p><strong>对于cortex-A7</strong><br>还要一个Current Program Status Register，9-5位不同<br><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/A7%E5%AF%84%E5%AD%98%E5%99%A8.png" alt="cortex-A7"></p>
+<h3 id="PRIMASK"><a href="#PRIMASK" class="headerlink" title="PRIMASK"></a>PRIMASK</h3><p>…待补充</p>
+<h3 id="CONTROL"><a href="#CONTROL" class="headerlink" title="CONTROL"></a>CONTROL</h3><p>… 待补充</p>
+<h2 id="汇编和机器码"><a href="#汇编和机器码" class="headerlink" title="汇编和机器码"></a>汇编和机器码</h2><p>一开始，ARM公司发布两类指令集：<strong>ARM指令集</strong>是ARM架构的原始指令集，每条指令都是32位长，因此执行速度较快，但占用的存储空间较大。<strong>Thumb指令集</strong>为了节省存储空间，ARM推出了16位的Thumb指令集。虽然每条指令更短，但执行速度相对较慢。<strong>区分Thumb和ARM指令</strong>：在程序状态寄存器（PSR）中，有一个名为“T”的位，用于指示当前的指令集状态。当T位为1时，表示处理器处于Thumb状态；当T位为0时，表示处理器处于ARM状态。<strong>调用Thumb和ARM函数</strong>：在调用函数时，可以通过设置程序计数器（PC）的最低位（BIT0）来指示使用哪种指令集。对于Thumb函数，PC的BIT0设置为1；对于ARM函数，PC的BIT0设置为0。<strong>Thumb2指令集</strong>：为了解决Thumb指令集的局限性，ARM推出了Thumb2指令集，它支持16位和32位指令的混合编程，提供了更好的性能和灵活性。<strong>统一汇编语言（UAL）</strong>：ARM推出了统一汇编语言，使得程序员在编写汇编代码时不需要区分不同的指令集。通过在代码中使用特定的指令（如CODE32、CODE16、THUMB）来指定使用哪种指令集。<br><strong>常用的汇编指令</strong>：</p>
+<ul>
+<li><code>MOV</code>：数据传送指令，用于寄存器之间或寄存器与立即数之间的数据移动。</li>
+<li><code>LDR/STR</code>：加载&#x2F;存储指令，用于从内存加载数据到寄存器或将数据从寄存器存储到内存。</li>
+<li><code>LDM/STM</code>：批量加载&#x2F;存储指令，用于在函数调用前后保存和恢复寄存器状态。</li>
+<li><code>AND/OR</code>：逻辑与&#x2F;或指令，用于执行逻辑运算。</li>
+<li><code>ADD/SUB</code>：加法&#x2F;减法指令，用于执行算术运算。</li>
+<li><code>B/BL</code>：分支指令，用于无条件或有条件的跳转。</li>
+<li><code>DCD</code>：定义32位的常量。</li>
+<li><code>ADR/LDR</code>：地址指令，用于加载地址到寄存器。</li>
+<li><code>CMP</code>：比较指令，用于比较两个寄存器的值。</li>
+</ul>
+<p>通过使用统一汇编语言，程序员可以更加方便地编写跨指令集的代码，而不需要关心底层的实现细节。这大大提高了代码的可读性和可维护性。<br>不过armcc和gcc汇编有一些区别<br><img src="/img/Advanced_Embedded_Systems/2_CPU%E6%9E%B6%E6%9E%84/armcc%E5%92%8Cgcc%E7%9A%84%E5%8C%BA%E5%88%AB.png" alt="armcc和gcc区别"></p>
+<h1 id="arm-V8-和-risc-V"><a href="#arm-V8-和-risc-V" class="headerlink" title="arm-V8 和 risc V"></a>arm-V8 和 risc V</h1><p>…待补充</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%85%A5%E9%97%A8/" rel="tag"># 嵌入式入门</a>
+              <a href="/tags/%E8%BF%9B%E9%98%B6%E6%8A%80%E6%9C%AF/" rel="tag"># 进阶技术</a>
+              <a href="/tags/CPU%E6%9E%B6%E6%9E%84/" rel="tag"># CPU架构</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/09/28/Introduction_Embedded_Systems/6_TIMER/" rel="prev" title="嵌入式入门--基础概念：6 定时器">
+                  <i class="fa fa-angle-left"></i> 嵌入式入门--基础概念：6 定时器
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/10/08/Advanced_Embedded_Systems/3_C_skills/" rel="next" title="嵌入式入门--进阶技术：3 语言技巧">
+                  嵌入式入门--进阶技术：3 语言技巧 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Ryan</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">23k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">21 分钟</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org//" rel="noopener" target="_blank">NexT.undefined</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
